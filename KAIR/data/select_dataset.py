@@ -77,6 +77,11 @@ def define_Dataset(dataset_opt):
     elif dataset_type in ['vfi_vid4']:
         from data.dataset_video_test import VFI_Vid4 as D
 
+    # -----------------------------------------
+    # one-bit SAR image restoration
+    # -----------------------------------------
+    elif dataset_type in ['sar_1bit']:
+        from data.dataset_sar_1bit import DatasetSAR1bit as D
 
     # -----------------------------------------
     # common
