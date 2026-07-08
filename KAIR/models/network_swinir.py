@@ -846,7 +846,8 @@ class SwinIR(nn.Module):
         for i, layer in enumerate(self.layers):
             flops += layer.flops()
         flops += H * W * 3 * self.embed_dim * self.embed_dim
-        flops += self.upsample.flops()
+        if self.upsampler == 'pixelshuffle' or self.upsampler == 'pixelshuffledirect':
+            flops += self.upsample.flops()
         return flops
 
 
@@ -855,9 +856,9 @@ if __name__ == '__main__':
     window_size = 8
     height = (1024 // upscale // window_size + 1) * window_size
     width = (720 // upscale // window_size + 1) * window_size
-    model = SwinIR(upscale=2, img_size=(height, width),
+    model = SwinIR(upscale=upscale, img_size=(height, width),
                    window_size=window_size, img_range=1., depths=[6, 6, 6, 6],
-                   embed_dim=60, num_heads=[6, 6, 6, 6], mlp_ratio=2, upsampler='pixelshuffledirect')
+                   embed_dim=60, num_heads=[6, 6, 6, 6], mlp_ratio=4, upsampler=None)
     print(model)
     print(height, width, model.flops() / 1e9)
 
