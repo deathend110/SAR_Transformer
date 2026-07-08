@@ -861,6 +861,8 @@ if __name__ == '__main__':
     print(model)
     print(height, width, model.flops() / 1e9)
 
-    x = torch.randn((1, 3, height, width))
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+    x = torch.randn((1, 3, height, width)).to(device)
     x = model(x)
     print(x.shape)
