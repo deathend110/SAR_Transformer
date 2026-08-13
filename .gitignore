@@ -1,0 +1,69 @@
+# obisidian
+.obsidian/
+
+# Python 缓存
+*/*/*/__pycache__/
+*/*/__pycache__/
+*/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+t.py
+
+# 模型/检查点文件
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# 大型二进制/数据文件
+*.npy
+*.npz
+*.mat
+*.h5
+*.hdf5
+*.onnx
+*.bin
+
+# 图片文件
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.tif
+*.tiff
+*.gif
+*.webp
+
+# 编译产物
+*.txt
+*.so
+*.o
+build/
+dist/
+
+# 输出/实验目录
+results/
+experiments/
+logs/
+tensorboard/
+
+# 数据集
+trainsets/
+testsets/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 参考论文
+paper/
