@@ -10,6 +10,8 @@ __pycache__/
 *.pyo
 *.egg-info/
 
+# 自己的非跟踪文件
+prompt.md
 t.py
 
 # 模型/检查点文件
