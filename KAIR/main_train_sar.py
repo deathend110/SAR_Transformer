@@ -1,6 +1,5 @@
 import os.path
 import csv
-import math
 import argparse
 import random
 import numpy as np
@@ -153,6 +152,12 @@ def main(json_path=os.path.join(os.path.dirname(__file__),
 
     # --<--<--<--<--<--<--<--<--<--<--<--<--<-
 
+    # 保存配置前确定实际种子，使随机生成的种子也能用于复现实验。
+    seed = opt['train'].get('manual_seed')
+    if seed is None:
+        seed = random.randint(1, 10000)
+    opt['train']['manual_seed'] = seed
+
     # ----------------------------------------
     # save opt to  a '../option.json' file
     # ----------------------------------------
@@ -176,9 +181,6 @@ def main(json_path=os.path.join(os.path.dirname(__file__),
     # ----------------------------------------
     # seed
     # ----------------------------------------
-    seed = opt['train']['manual_seed']
-    if seed is None:
-        seed = random.randint(1, 10000)
     print('Random seed: {}'.format(seed))
     random.seed(seed)
     np.random.seed(seed)
@@ -198,9 +200,6 @@ def main(json_path=os.path.join(os.path.dirname(__file__),
     for phase, dataset_opt in opt['datasets'].items():
         if phase == 'train':
             train_set = define_Dataset(dataset_opt)
-            train_size = int(math.ceil(len(train_set) / dataset_opt['dataloader_batch_size']))
-            if opt['rank'] == 0:
-                logger.info('Number of train images: {:,d}, iters: {:,d}'.format(len(train_set), train_size))
             if opt['dist']:
                 train_sampler = DistributedSampler(train_set, shuffle=dataset_opt['dataloader_shuffle'], drop_last=True, seed=seed)
                 train_loader = DataLoader(train_set,
@@ -217,6 +216,8 @@ def main(json_path=os.path.join(os.path.dirname(__file__),
                                           num_workers=dataset_opt['dataloader_num_workers'],
                                           drop_last=True,
                                           pin_memory=True)
+            if opt['rank'] == 0:
+                logger.info('Number of train images: {:,d}, iters: {:,d}'.format(len(train_set), len(train_loader)))
 
         elif phase == 'test':
             test_set = define_Dataset(dataset_opt)

@@ -62,7 +62,8 @@ class ModelBase():
             scheduler.step(n)
 
     def current_learning_rate(self):
-        return self.schedulers[0].get_lr()[0]
+        # 读取最近一次调度后的学习率，避免在 milestone 处再次计算衰减。
+        return self.schedulers[0].get_last_lr()[0]
 
     def requires_grad(self, model, flag=True):
         for p in model.parameters():
@@ -187,7 +188,8 @@ class ModelBase():
     # load the state_dict of the optimizer
     # ----------------------------------------
     def load_optimizer(self, load_path, optimizer):
-        optimizer.load_state_dict(torch.load(load_path, map_location=lambda storage, loc: storage.cuda(torch.cuda.current_device())))
+        # 由优化器按参数设备恢复动量，避免把 Adam 的 CPU 步数计数强制移到 GPU。
+        optimizer.load_state_dict(torch.load(load_path, map_location='cpu'))
 
     def update_E(self, decay=0.999):
         netG = self.get_bare_model(self.netG)

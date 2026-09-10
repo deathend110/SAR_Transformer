@@ -1,12 +1,14 @@
 """SAR 入口回归测试：在具备 KAIR 依赖的环境中以 unittest discover 运行。"""
 
 import csv
+import json
 import logging
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 KAIR_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(KAIR_ROOT))
@@ -16,7 +18,7 @@ import torch
 from torch.utils.data import DataLoader, Subset
 
 from data.dataset_sar_1bit import DatasetSAR1bit
-from main_train_sar import METRIC_NAMES, evaluate
+from main_train_sar import METRIC_NAMES, evaluate, main
 from models.model_plain import ModelPlain
 from utils import utils_image as util
 from utils import utils_option as option
@@ -68,6 +70,31 @@ class SARTrainingTest(unittest.TestCase):
         with path.open(encoding='utf-8', newline='') as stream:
             reader = csv.DictReader(stream)
             return reader.fieldnames, list(reader)
+
+    def test_main_records_seed_and_loader_length(self):
+        train_set = self.make_dataset('train')
+        test_set = self.make_dataset('test')
+        self.opt['path'].update(root=str(self.root), task=str(self.root),
+                                log=str(self.root), options=str(self.root / 'options'),
+                                images=str(self.root / 'images'))
+        self.opt['train']['manual_seed'] = None
+        # 只执行真实入口的配置和 DataLoader 初始化，不进入持续训练循环。
+        with patch.object(sys, 'argv', ['main_train_sar.py']), \
+                patch('main_train_sar.option.parse', return_value=self.opt), \
+                patch('main_train_sar.random.randint', return_value=1234), \
+                patch('main_train_sar.utils_logger.logger_info'), \
+                patch('main_train_sar.define_Dataset', side_effect=[train_set, test_set]), \
+                patch('main_train_sar.define_Model', side_effect=RuntimeError('stop after setup')), \
+                self.assertLogs('train', level='INFO') as logs:
+            with self.assertRaisesRegex(RuntimeError, 'stop after setup'):
+                main()
+
+        saved_path, = (self.root / 'options').glob('*.json')
+        saved = json.loads(saved_path.read_text(encoding='utf-8'))
+        self.assertEqual(saved['train']['manual_seed'], 1234)
+        self.assertEqual(torch.initial_seed(), 1234)
+        # 18 帧 / batch 8，drop_last=True 实际只能形成 2 个训练 batch。
+        self.assertTrue(any('Number of train images: 18, iters: 2' in line for line in logs.output))
 
     def test_validation_csv_images_and_plot(self):
         dataset = self.make_dataset()
@@ -145,9 +172,7 @@ class SARTrainingTest(unittest.TestCase):
         self.assertAlmostEqual(restored.current_learning_rate(),
                                self.opt['train']['G_optimizer_lr'] * self.opt['train']['G_scheduler_gamma'])
 
-    @unittest.skipUnless(torch.cuda.is_available(), 'KAIR optimizer resume requires CUDA')
     def test_optimizer_resume(self):
-        self.opt['gpu_ids'] = [0]
         model = self.make_model()
         batch = {'L': torch.rand(1, 1, 128, 128), 'H': torch.rand(1, 1, 128, 128)}
         model.feed_data(batch)
