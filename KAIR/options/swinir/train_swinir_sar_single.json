@@ -1,0 +1,84 @@
+{
+  "task": "swinir_sar_single" // single-frame one-bit SAR restoration baseline
+  , "model": "plain"
+  , "gpu_ids": [0]
+  , "dist": false
+
+  , "n_channels": 1
+
+  , "path": {
+    "root": "denoising"
+    , "pretrained_netG": null
+    , "pretrained_netE": null
+  }
+
+  , "datasets": {
+    "train": {
+      "name": "sar_single_train"
+      , "dataset_type": "sar_1bit"
+      , "dataroot_L": "/path/to/sar_dataset/LQ" // 修改为单比特 SAR LQ 根目录
+      , "dataroot_H": "/path/to/sar_dataset/GT" // 修改为全精度 SAR GT 根目录
+      , "split_file": "/path/to/splits/train.txt" // 修改为训练 sequence 列表
+      , "H_size": 128
+      , "dataloader_shuffle": true
+      , "dataloader_num_workers": 8
+      , "dataloader_batch_size": 8
+    }
+    , "test": {
+      "name": "sar_single_test"
+      , "dataset_type": "sar_1bit"
+      , "dataroot_L": "/path/to/sar_dataset/LQ" // 修改为单比特 SAR LQ 根目录
+      , "dataroot_H": "/path/to/sar_dataset/GT" // 修改为全精度 SAR GT 根目录
+      , "split_file": "/path/to/splits/test.txt" // 修改为测试 sequence 列表
+      , "H_size": 512 // 测试使用完整 512x512 图像，不裁 patch
+    }
+  }
+
+  , "netG": {
+    "net_type": "swinir"
+    , "upscale": 1
+    , "in_chans": 1
+    , "img_size": 128
+    , "window_size": 8
+    , "img_range": 1.0
+    , "depths": [6, 6, 6, 6, 6, 6]
+    , "embed_dim": 180
+    , "num_heads": [6, 6, 6, 6, 6, 6]
+    , "mlp_ratio": 2
+    , "upsampler": null
+    , "resi_connection": "1conv"
+
+    , "init_type": "default"
+    , "init_bn_type": "uniform"
+    , "init_gain": 0.2
+  }
+
+  , "train": {
+    "G_lossfn_type": "charbonnier"
+    , "G_lossfn_weight": 1.0
+    , "G_charbonnier_eps": 1e-9
+
+    , "E_decay": 0
+
+    , "G_optimizer_type": "adam"
+    , "G_optimizer_lr": 2e-4
+    , "G_optimizer_betas": [0.9, 0.999]
+    , "G_optimizer_wd": 0
+    , "G_optimizer_clipgrad": null
+    , "G_optimizer_reuse": true
+
+    , "G_scheduler_type": "MultiStepLR"
+    , "G_scheduler_milestones": [800000, 1200000, 1400000, 1500000, 1600000]
+    , "G_scheduler_gamma": 0.5
+
+    , "G_regularizer_orthstep": null
+    , "G_regularizer_clipstep": null
+
+    , "G_param_strict": true
+    , "E_param_strict": true
+
+    , "checkpoint_test": 5000
+    , "checkpoint_save": 5000
+    , "checkpoint_print": 200
+  }
+}
