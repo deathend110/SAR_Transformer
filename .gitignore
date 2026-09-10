@@ -63,6 +63,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.venv/
 
 # Jupyter
 .ipynb_checkpoints/
