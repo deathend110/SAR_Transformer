@@ -29,11 +29,11 @@ uv sync --locked
 | 划分列表           | `docs/splits/sar_single_seed42/train.txt`、`test.txt` |
 | 训练输入           | 单通道，LQ/GT 同位置随机裁剪 128×128，不翻转或旋转                     |
 | 测试输入           | 单通道，完整 512×512 图像                                    |
-| 总 batch size   | 2（GPU 0、1 各 1 张）                                                    |
+| 总 batch size   | 6（GPU 0、1 各 3 张）                                                    |
 | 随机种子           | 42                                                   |
-| 损失与优化器         | Charbonnier、Adam，初始学习率 `1e-4`                        |
-| 学习率衰减          | 3200000、4800000、5600000、6000000、6400000 步，各乘 0.5      |
-| 日志 / 保存 / 评估间隔 | 800 / 20000 / 20000 步                                  |
+| 损失与优化器         | Charbonnier、Adam，初始学习率 `1.732e-4`                        |
+| 学习率衰减          | 1066667、1600000、1866667、2000000、2133333 步，各乘 0.5      |
+| 日志 / 保存 / 评估间隔 | 267 / 6667 / 6667 步                                  |
 
 数据和 split 路径已配置为当前机器的绝对路径。迁移仓库时需更新 `datasets.train`、`datasets.test` 中对应路径。问题定义见 [Define.md](Define.md)，划分方法见 [数据划分说明](splits/sar_single_seed42/README.md)。
 
@@ -43,7 +43,7 @@ uv sync --locked
 
 ### 默认双卡运行（GPU 0、1）
 
-默认配置为 `"gpu_ids": [0,1]`、`"dist": false`，总 batch size 为 2，每卡处理 1 张 128×128 patch：
+默认配置为 `"gpu_ids": [0,1]`、`"dist": false`，总 batch size 为 6，每卡处理 3 张 128×128 patch：
 
 ```bash
 uv run --no-sync python KAIR/main_train_sar.py --opt KAIR/options/swinir/train_swinir_sar_single.json
@@ -51,11 +51,11 @@ uv run --no-sync python KAIR/main_train_sar.py --opt KAIR/options/swinir/train_s
 
 该方式使用现有 `DataParallel`，不需要 `torchrun` 或 `--dist`。GPU 0 是主卡，承担结果聚合；验证 batch size 为 1，主要使用主卡。
 
-本次针对 batch 8 双卡显存不足，将总 batch 降为 2，并将初始学习率设为 `1e-4`，这是待实验观察收敛效果的起始设置。milestones 和日志、保存、评估间隔乘 4，保持相应节点前累计处理的训练样本量一致；优化器更新次数会增加，不等价于原 batch 8 训练。
+当前总 batch 从 2 调为 6，初始学习率按 `1e-4 × sqrt(6/2)` 设为 `1.732e-4`，后续根据收敛情况评估。milestones 和日志、保存、评估间隔按原 batch 2 配置除以 3 并四舍五入到整数步，近似保持相应节点前累计处理的训练样本量一致；这不等价于原 batch 2 的优化过程。
 
-完整模型在真实数据上完成连续 3 步双卡训练，PyTorch 峰值已分配显存为 GPU 0 约 6.10 GiB、GPU 1 约 5.98 GiB；随后完成 512×512 整图验证，主卡峰值约 2.84 GiB，输出尺寸正确且全部有限。此统计不包含驱动开销和 PyTorch 缓存预留显存，nvitop 读数可能更高。
+此前 batch 2 的实测训练占用约为每卡 7～7.5 GB（用户监控读数）。该读数对应旧配置，batch 6 的实际占用需在重启后观察。
 
-要换用 GPU 0、3，将 `gpu_ids` 改为 `[0,3]`。当前 batch 2 使用双卡即可。单卡时改为 `[0]`、`[1]` 或 `[3]`，总 batch 仍为 2，单卡需承担两张 patch 的训练显存。
+要换用 GPU 0、3，将 `gpu_ids` 改为 `[0,3]`。默认使用双卡，每卡 3 张 patch。
 
 ### 后台运行与查看进度
 
@@ -88,7 +88,7 @@ denoising/<task>/
 ├── options/                      # 本次运行保存的配置
 ├── models/                       # 网络和优化器检查点
 └── images/
-    └── 000020000/                # 九位迭代号，例如第 20000 步
+    └── 000006667/                # 九位迭代号，例如第 6667 步
         ├── <sequence_name>/
         │   ├── 000.png
         │   └── ... 008.png       # 九帧恢复图
@@ -106,7 +106,7 @@ denoising/<task>/
 
 ```bash
 uv run --no-sync python KAIR/scripts/plot_sar_metrics.py \
-  denoising/swinir_sar_single/images/000020000
+  denoising/swinir_sar_single/images/000006667
 ```
 
 该目录会新增 `frame_position_psnr.png` 和 `frame_position_ssim.png`。其他实验替换 task，其他评估步数替换末尾目录名。
@@ -121,6 +121,8 @@ kill <对应训练进程的PID>
 ```
 
 停止时不会额外保存检查点，需以最近一次完整保存的检查点为准。建议在日志显示保存及当次评估完成后停止。
+
+修改配置后需重启训练进程才能生效。若从旧 batch 的检查点续训，入口沿用保存的迭代号，不会按已处理样本量换算历史步数；上述样本量对齐以从头训练为基准。
 
 **续训**：从同一工作目录重新执行原启动命令。入口会自动查找该 task 的 `models/` 下最新网络和优化器检查点，恢复迭代步数并继续训练。保留配套网络、优化器文件；该恢复不保证随机裁剪和数据顺序与未中断运行逐步完全一致。
 

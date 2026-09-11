@@ -22,7 +22,7 @@
       , "H_size": 128
       , "dataloader_shuffle": true
       , "dataloader_num_workers": 8
-      , "dataloader_batch_size": 2 // 双卡各处理 1 张 patch，降低训练激活显存
+      , "dataloader_batch_size": 6 // 双卡各处理 3 张 128×128 patch
     }
     , "test": {
       "name": "sar_single_test"
@@ -62,14 +62,14 @@
     , "E_decay": 0
 
     , "G_optimizer_type": "adam"
-    , "G_optimizer_lr": 1e-4 // 小 batch 的初始学习率，后续根据收敛情况评估
+    , "G_optimizer_lr": 1.732e-4 // 以 batch 2 的 1e-4 按 sqrt(6/2) 调整，后续观察收敛
     , "G_optimizer_betas": [0.9, 0.999]
     , "G_optimizer_wd": 0
     , "G_optimizer_clipgrad": null
     , "G_optimizer_reuse": true
 
     , "G_scheduler_type": "MultiStepLR"
-    , "G_scheduler_milestones": [3200000, 4800000, 5600000, 6000000, 6400000] // batch 8→2，按相同样本量将步数乘 4
+    , "G_scheduler_milestones": [1066667, 1600000, 1866667, 2000000, 2133333] // batch 2→6，按相同样本量将步数除以 3 并取整
     , "G_scheduler_gamma": 0.5
 
     , "G_regularizer_orthstep": null
@@ -78,8 +78,8 @@
     , "G_param_strict": true
     , "E_param_strict": true
 
-    , "checkpoint_test": 20000
-    , "checkpoint_save": 20000
-    , "checkpoint_print": 800
+    , "checkpoint_test": 6667
+    , "checkpoint_save": 6667
+    , "checkpoint_print": 267
   }
 }
