@@ -21,19 +21,19 @@ uv sync --locked
 
 当前数据版本为 `dataset_range_2dsft/range_2d_sft_qh2p5_ql1p5_s1_fr0p9_fa0p5_phi0_lp0p99_hp99p9_roi600_eb64`，其中 `LQ/` 和 `GT/` 下按同名 sequence 配对，每条包含 `000.png`～`008.png`。
 
-| 项目 | 当前设置 |
-| --- | --- |
-| 数据划分 | seed 42，按完整 sequence 划分 80% 训练、20% 测试 |
-| 训练集 | 3,278 条 sequence，共 29,502 帧 |
-| 测试集 | 820 条 sequence，共 7,380 帧 |
-| 划分列表 | `docs/splits/sar_single_seed42/train.txt`、`test.txt` |
-| 训练输入 | 单通道，LQ/GT 同位置随机裁剪 128×128，不翻转或旋转 |
-| 测试输入 | 单通道，完整 512×512 图像 |
-| 总 batch size | 8 |
-| 随机种子 | 42 |
-| 损失与优化器 | Charbonnier、Adam，初始学习率 `2e-4` |
-| 学习率衰减 | 800000、1200000、1400000、1500000、1600000 步，各乘 0.5 |
-| 日志 / 保存 / 评估间隔 | 200 / 5000 / 5000 步 |
+| 项目             | 当前设置                                                 |
+| -------------- | ---------------------------------------------------- |
+| 数据划分           | seed 42，按完整 sequence 划分 80% 训练、20% 测试                |
+| 训练集            | 3,278 条 sequence，共 29,502 帧                          |
+| 测试集            | 820 条 sequence，共 7,380 帧                             |
+| 划分列表           | `docs/splits/sar_single_seed42/train.txt`、`test.txt` |
+| 训练输入           | 单通道，LQ/GT 同位置随机裁剪 128×128，不翻转或旋转                     |
+| 测试输入           | 单通道，完整 512×512 图像                                    |
+| 总 batch size   | 8                                                    |
+| 随机种子           | 42                                                   |
+| 损失与优化器         | Charbonnier、Adam，初始学习率 `2e-4`                        |
+| 学习率衰减          | 800000、1200000、1400000、1500000、1600000 步，各乘 0.5      |
+| 日志 / 保存 / 评估间隔 | 200 / 5000 / 5000 步                                  |
 
 数据和 split 路径已配置为当前机器的绝对路径。迁移仓库时需更新 `datasets.train`、`datasets.test` 中对应路径。问题定义见 [Define.md](Define.md)，划分方法见 [数据划分说明](splits/sar_single_seed42/README.md)。
 
@@ -46,8 +46,7 @@ uv sync --locked
 默认配置为 `"gpu_ids": [0]`、`"dist": false`，直接运行：
 
 ```bash
-uv run --no-sync python KAIR/main_train_sar.py \
-  --opt KAIR/options/swinir/train_swinir_sar_single.json
+uv run --no-sync python KAIR/main_train_sar.py --opt KAIR/options/swinir/train_swinir_sar_single.json
 ```
 
 要改用 GPU 1 或 GPU 3，将配置中的 `gpu_ids` 改为 `[1]` 或 `[3]`，再执行同一命令。
