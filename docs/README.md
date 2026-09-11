@@ -29,10 +29,10 @@ uv sync --locked
 | 划分列表           | `docs/splits/sar_single_seed42/train.txt`、`test.txt` |
 | 训练输入           | 单通道，LQ/GT 同位置随机裁剪 128×128，不翻转或旋转                     |
 | 测试输入           | 单通道，完整 512×512 图像                                    |
-| 总 batch size   | 6（GPU 0、1 各 3 张）                                                    |
+| 总 batch size   | 6（GPU 0、1 各 3 张）                                     |
 | 随机种子           | 42                                                   |
-| 损失与优化器         | Charbonnier、Adam，初始学习率 `1.732e-4`                        |
-| 学习率衰减          | 1066667、1600000、1866667、2000000、2133333 步，各乘 0.5      |
+| 损失与优化器         | Charbonnier、Adam，初始学习率 `1.732e-4`                    |
+| 学习率衰减          | 1066667、1600000、1866667、2000000、2133333 步，各乘 0.5     |
 | 日志 / 保存 / 评估间隔 | 267 / 6667 / 6667 步                                  |
 
 数据和 split 路径已配置为当前机器的绝对路径。迁移仓库时需更新 `datasets.train`、`datasets.test` 中对应路径。问题定义见 [Define.md](Define.md)，划分方法见 [数据划分说明](splits/sar_single_seed42/README.md)。
