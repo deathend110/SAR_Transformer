@@ -51,6 +51,7 @@ results/
 experiments/
 logs/
 tensorboard/
+denoising/
 
 # 数据集
 trainsets/
