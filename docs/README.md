@@ -23,9 +23,9 @@ uv sync --locked
 
 | 项目             | 当前设置                                                 |
 | -------------- | ---------------------------------------------------- |
-| 数据划分           | seed 42，按完整 sequence 划分 80% 训练、20% 测试                |
-| 训练集            | 3,278 条 sequence，共 29,502 帧                          |
-| 测试集            | 820 条 sequence，共 7,380 帧                             |
+| 数据划分           | seed 42，按完整 sequence 划分 90% 训练、10% 测试                |
+| 训练集            | 3,688 条 sequence，共 33,192 帧                          |
+| 测试集            | 410 条 sequence，共 3,690 帧                             |
 | 划分列表           | `docs/splits/sar_single_seed42/train.txt`、`test.txt` |
 | 训练输入           | 单通道，LQ/GT 同位置随机裁剪 128×128，不翻转或旋转                     |
 | 测试输入           | 单通道，完整 512×512 图像                                    |
@@ -76,7 +76,7 @@ tail -f logs/swinir_sar_single.console.log
 nvidia-smi
 ```
 
-`tail -f` 中按 Ctrl+C 只退出日志查看。完整测试会逐帧处理 7,380 张图像并保存恢复图，评估期间训练暂停。
+`tail -f` 中按 Ctrl+C 只退出日志查看。完整测试会逐帧处理 3,690 张图像，仅保存指标 CSV，评估期间训练暂停。
 
 ## 4. 输出位置与指标
 
@@ -89,9 +89,6 @@ denoising/<task>/
 ├── models/                       # 网络和优化器检查点
 └── images/
     └── 000006667/                # 九位迭代号，例如第 6667 步
-        ├── <sequence_name>/
-        │   ├── 000.png
-        │   └── ... 008.png       # 九帧恢复图
         ├── metrics_per_frame.csv
         └── frame_position_summary.csv
 ```
@@ -99,6 +96,8 @@ denoising/<task>/
 - `metrics_per_frame.csv`：每个 sequence、每帧的输入与恢复 PSNR/SSIM，以及 `delta = output - input`。
 - `frame_position_summary.csv`：F₀～F₈ 各位置的样本数、指标均值和标准差，标准差使用 `ddof=0`。
 - `train.log`：同时记录全部测试帧等权平均的六项指标。
+
+当前配置 `train.save_test_images=false`，验证不保存逐帧恢复图片，也不创建 sequence 图片目录；PSNR/SSIM 和两份 CSV 照常计算、输出。已有历史图片不受影响。
 
 指标沿用 KAIR 实现，在转为 uint8 的完整图像上计算，`border=0`。分析时可同时查看整体提升、中央 F₄ 的改善和九帧质量分布。
 

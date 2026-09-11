@@ -35,8 +35,8 @@ METRIC_NAMES = (
 )
 
 
-def evaluate(model, test_loader, images_dir, current_step, logger):
-    """逐帧恢复完整测试集，按 sequence 保存图像，返回六项总体均值。"""
+def evaluate(model, test_loader, images_dir, current_step, logger, save_images=True):
+    """逐帧评估完整测试集，按需保存恢复图像，始终输出指标 CSV。"""
     if len(test_loader.dataset) == 0:
         raise ValueError('SAR evaluation dataset is empty.')
 
@@ -54,9 +54,10 @@ def evaluate(model, test_loader, images_dir, current_step, logger):
         E_img = util.tensor2uint(visuals['E'])
         H_img = util.tensor2uint(visuals['H'])
 
-        sequence_dir = os.path.join(checkpoint_dir, sequence_name)
-        util.mkdir(sequence_dir)
-        util.imsave(E_img, os.path.join(sequence_dir, f'{frame_idx:03d}.png'))
+        if save_images:
+            sequence_dir = os.path.join(checkpoint_dir, sequence_name)
+            util.mkdir(sequence_dir)
+            util.imsave(E_img, os.path.join(sequence_dir, f'{frame_idx:03d}.png'))
 
         # 使用完整图像及 KAIR 现有指标定义，不额外 shave border。
         input_psnr = util.calculate_psnr(L_img, H_img, border=0)
@@ -295,7 +296,8 @@ def main(json_path=os.path.join(os.path.dirname(__file__),
                     if opt['dist']:
                         model.netG = model.get_bare_model(training_net)
                     try:
-                        evaluate(model, test_loader, opt['path']['images'], current_step, logger)
+                        evaluate(model, test_loader, opt['path']['images'], current_step, logger,
+                                 save_images=opt['train']['save_test_images'])
                     finally:
                         model.netG = training_net
                 if opt['dist']:

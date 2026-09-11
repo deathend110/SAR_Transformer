@@ -72,6 +72,7 @@ class SARTrainingTest(unittest.TestCase):
             return reader.fieldnames, list(reader)
 
     def test_main_records_seed_and_loader_length(self):
+        self.opt['datasets']['train']['dataloader_batch_size'] = 8
         train_set = self.make_dataset('train')
         test_set = self.make_dataset('test')
         self.opt['path'].update(root=str(self.root), task=str(self.root),
@@ -202,9 +203,13 @@ class SARTrainingTest(unittest.TestCase):
         # 原始数据只读，取前两条完整 sequence，不改变正式 split。
         loader = DataLoader(Subset(dataset, range(18)), batch_size=1, shuffle=False)
         evaluate(self.make_model(), loader, str(self.root / 'images'), 1,
-                 logging.getLogger('sar_local_test'))
+                 logging.getLogger('sar_local_test'), save_images=False)
         checkpoint = self.root / 'images' / '000000001'
-        self.assertEqual(len(list(checkpoint.glob('*/*.png'))), 18)
+        self.assertEqual({p.name for p in checkpoint.iterdir()},
+                         {'metrics_per_frame.csv', 'frame_position_summary.csv'})
+        self.assertEqual(list(checkpoint.rglob('*.png')), [])
+        _, rows = self.read_csv(checkpoint / 'metrics_per_frame.csv')
+        self.assertEqual(len(rows), 18)
         _, summary = self.read_csv(checkpoint / 'frame_position_summary.csv')
         self.assertEqual([int(row['count']) for row in summary], [2] * 9)
 

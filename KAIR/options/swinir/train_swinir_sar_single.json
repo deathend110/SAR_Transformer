@@ -18,7 +18,7 @@
       , "dataset_type": "sar_1bit"
       , "dataroot_L": "/data/cjz/SAR_Transformer/dataset_range_2dsft/range_2d_sft_qh2p5_ql1p5_s1_fr0p9_fa0p5_phi0_lp0p99_hp99p9_roi600_eb64/LQ" // 单比特 SAR LQ 根目录
       , "dataroot_H": "/data/cjz/SAR_Transformer/dataset_range_2dsft/range_2d_sft_qh2p5_ql1p5_s1_fr0p9_fa0p5_phi0_lp0p99_hp99p9_roi600_eb64/GT" // 全精度 SAR GT 根目录
-      , "split_file": "/data/cjz/SAR_Transformer/docs/splits/sar_single_seed42/train.txt" // seed 42，80% sequence 用于训练
+      , "split_file": "/data/cjz/SAR_Transformer/docs/splits/sar_single_seed42/train.txt" // seed 42，90% sequence 用于训练
       , "H_size": 128
       , "dataloader_shuffle": true
       , "dataloader_num_workers": 8
@@ -29,7 +29,7 @@
       , "dataset_type": "sar_1bit"
       , "dataroot_L": "/data/cjz/SAR_Transformer/dataset_range_2dsft/range_2d_sft_qh2p5_ql1p5_s1_fr0p9_fa0p5_phi0_lp0p99_hp99p9_roi600_eb64/LQ" // 单比特 SAR LQ 根目录
       , "dataroot_H": "/data/cjz/SAR_Transformer/dataset_range_2dsft/range_2d_sft_qh2p5_ql1p5_s1_fr0p9_fa0p5_phi0_lp0p99_hp99p9_roi600_eb64/GT" // 全精度 SAR GT 根目录
-      , "split_file": "/data/cjz/SAR_Transformer/docs/splits/sar_single_seed42/test.txt" // seed 42，剩余 20% sequence 用于测试
+      , "split_file": "/data/cjz/SAR_Transformer/docs/splits/sar_single_seed42/test.txt" // seed 42，剩余 10% sequence 用于测试
       , "H_size": 512 // 测试使用完整 512x512 图像，不裁 patch
     }
   }
@@ -78,6 +78,7 @@
     , "G_param_strict": true
     , "E_param_strict": true
 
+    , "save_test_images": false // 验证仅保存指标 CSV，不保存逐帧恢复图片
     , "checkpoint_test": 6667
     , "checkpoint_save": 6667
     , "checkpoint_print": 267
